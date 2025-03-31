@@ -78,28 +78,29 @@ uint32_t ExFatPartition::bitmapFind(uint32_t cluster, uint32_t count) {
 bool ExFatPartition::bitmapModify(uint32_t cluster,
                                   uint32_t count, bool value) {
   uint32_t sector;
-  uint32_t start = cluster - 2;
+  uint32_t sstart=0;
+  sstart = cluster - 2;
   size_t i;
   uint8_t* cache;
   uint8_t mask;
   cluster -= 2;
-  if ((start + count) > m_clusterCount) {
+  if ((sstart + count) > m_clusterCount) {
     DBG_FAIL_MACRO;
     goto fail;
   }
   if (value) {
-    if (start  <= m_bitmapStart && m_bitmapStart < (start + count)) {
-      m_bitmapStart = (start + count) < m_clusterCount ? start + count : 0;
+    if (sstart  <= m_bitmapStart && m_bitmapStart < (sstart + count)) {
+      m_bitmapStart = (sstart + count) < m_clusterCount ? sstart + count : 0;
     }
   } else {
-    if (start < m_bitmapStart) {
-      m_bitmapStart = start;
+    if (sstart < m_bitmapStart) {
+      m_bitmapStart = sstart;
     }
   }
-  mask = 1 << (start & 7);
+  mask = 1 << (sstart & 7);
   sector = m_clusterHeapStartSector +
-                   (start >> (m_bytesPerSectorShift + 3));
-  i = (start >> 3) & m_sectorMask;
+                   (sstart >> (m_bytesPerSectorShift + 3));
+  i = (sstart >> 3) & m_sectorMask;
   while (true) {
     cache = bitmapCachePrepare(sector++, FsCache::CACHE_FOR_WRITE);
     if (!cache) {
@@ -209,7 +210,8 @@ bool ExFatPartition::fatPut(uint32_t cluster, uint32_t value) {
 //------------------------------------------------------------------------------
 bool ExFatPartition::freeChain(uint32_t cluster) {
   uint32_t next;
-  uint32_t start = cluster;
+  uint32_t fstart=0;
+  fstart = cluster;
   int8_t status;
   do {
     status = fatGet(cluster, &next);
@@ -222,11 +224,11 @@ bool ExFatPartition::freeChain(uint32_t cluster) {
       goto fail;
     }
     if (status == 0 || (cluster + 1) != next) {
-      if (!bitmapModify(start, cluster - start + 1, 0)) {
+      if (!bitmapModify(fstart, cluster - fstart + 1, 0)) {
         DBG_FAIL_MACRO;
         goto fail;
       }
-      start = next;
+      fstart = next;
     }
     cluster = next;
   } while (status);

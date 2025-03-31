@@ -133,6 +133,8 @@ static const uint8_t SCL = PIN_WIRE_SCL;
 #define EXTERNAL_FLASH_DEVICES  (P25Q16H)
 #define EXTERNAL_FLASH_USE_QSPI
 
+#define VARIANTVERSION "Seeed_XIAO_nRF52840"
+
 #ifdef __cplusplus
 }
 #endif
