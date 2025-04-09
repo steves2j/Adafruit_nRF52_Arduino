@@ -23,6 +23,7 @@
 #define String_class_h
 #ifdef __cplusplus
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -186,6 +187,8 @@ public:
 	// parsing/conversion
 	long toInt(void) const;
 	float toFloat(void) const;
+
+	static String format(const char* fmt, ...);
 
 protected:
 	char *buffer;	        // the actual char array

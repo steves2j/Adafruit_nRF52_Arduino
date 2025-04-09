@@ -22,6 +22,7 @@
 #include "WString.h"
 #include "itoa.h"
 #include "avr/dtostrf.h"
+#include <stdio.h>
 
 /*********************************************/
 /*  Constructors                             */
@@ -753,4 +754,24 @@ float String::toFloat(void) const
 {
 	if (buffer) return float(atof(buffer));
 	return 0;
+}
+
+String String::format(const char* fmt, ...)
+{
+    va_list marker;
+    va_start(marker, fmt);
+    const int bufsize = 5;
+    char test[bufsize];
+    size_t n = vsnprintf(test, bufsize, fmt, marker);
+    va_end(marker);
+
+    String result;
+    result.reserve(n);  // internally adds +1 for null terminator
+    if (result.buffer) {
+        va_start(marker, fmt);
+        n = vsnprintf(result.buffer, n+1, fmt, marker);
+        va_end(marker);
+        result.len = n;
+    }
+    return result;
 }
