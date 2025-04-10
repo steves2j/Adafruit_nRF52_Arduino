@@ -29,7 +29,20 @@ extern "C" {
 
 #include "Wire.h"
 
+
 #include <Adafruit_TinyUSB.h> // for Serial
+
+#define WHILE_TIMEOUT(condition,timeoutMs) ({\
+  uint32_t ts = micros();\
+  bool rtn=true;\
+  while((condition)) {\
+    if ((condition) && ((timeoutMs*1000)<(micros()-ts))) {\
+      rtn=false;\
+      break;\
+    }\
+  }\
+  rtn;\
+})
 
 static volatile uint32_t* pincfg_reg(uint32_t pin)
 {
@@ -73,21 +86,24 @@ void TwoWire::begin(void) {
   NVIC_EnableIRQ(_IRQn);
 }
 
+
 void TwoWire::begin(uint8_t address) {
+
   //Secondary mode
   master = false;
 
-  *pincfg_reg(_uc_pinSCL) = ((uint32_t)GPIO_PIN_CNF_DIR_Input        << GPIO_PIN_CNF_DIR_Pos)
-                          | ((uint32_t)GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos)
+
+ *pincfg_reg(_uc_pinSCL) = ((uint32_t)GPIO_PIN_CNF_DIR_Input         << GPIO_PIN_CNF_DIR_Pos)
+                          | ((uint32_t)GPIO_PIN_CNF_INPUT_Connect    << GPIO_PIN_CNF_INPUT_Pos)
                           | ((uint32_t)GPIO_PIN_CNF_PULL_Disabled    << GPIO_PIN_CNF_PULL_Pos)
-                          | ((uint32_t)GPIO_PIN_CNF_DRIVE_S0S1       << GPIO_PIN_CNF_DRIVE_Pos)
+                          | ((uint32_t)GPIO_PIN_CNF_DRIVE_S0D1       << GPIO_PIN_CNF_DRIVE_Pos)
                           | ((uint32_t)GPIO_PIN_CNF_SENSE_Disabled   << GPIO_PIN_CNF_SENSE_Pos);
 
-  *pincfg_reg(_uc_pinSDA) = ((uint32_t)GPIO_PIN_CNF_DIR_Input        << GPIO_PIN_CNF_DIR_Pos)
-                          | ((uint32_t)GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos)
+ *pincfg_reg(_uc_pinSDA) = ((uint32_t)GPIO_PIN_CNF_DIR_Input         << GPIO_PIN_CNF_DIR_Pos)
+                          | ((uint32_t)GPIO_PIN_CNF_INPUT_Connect    << GPIO_PIN_CNF_INPUT_Pos)
                           | ((uint32_t)GPIO_PIN_CNF_PULL_Disabled    << GPIO_PIN_CNF_PULL_Pos)
-                          | ((uint32_t)GPIO_PIN_CNF_DRIVE_S0S1       << GPIO_PIN_CNF_DRIVE_Pos)
-                          | ((uint32_t)GPIO_PIN_CNF_SENSE_Disabled   << GPIO_PIN_CNF_SENSE_Pos);
+                          | ((uint32_t)GPIO_PIN_CNF_DRIVE_S0D1       << GPIO_PIN_CNF_DRIVE_Pos)
+                          | ((uint32_t)GPIO_PIN_CNF_SENSE_Disabled   << GPIO_PIN_CNF_SENSE_Pos);                      
 
   _p_twis->ADDRESS[0] = address;
   _p_twis->CONFIG = TWIS_CONFIG_ADDRESS0_Msk;
@@ -163,22 +179,22 @@ uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
   _p_twim->RXD.MAXCNT = quantity;
   _p_twim->TASKS_STARTRX = 0x1UL;
 
-  while(!_p_twim->EVENTS_RXSTARTED && !_p_twim->EVENTS_ERROR);
+  WHILE_TIMEOUT(!_p_twim->EVENTS_RXSTARTED && !_p_twim->EVENTS_ERROR,_timeout);
   _p_twim->EVENTS_RXSTARTED = 0x0UL;
 
-  while(!_p_twim->EVENTS_LASTRX && !_p_twim->EVENTS_ERROR);
+  WHILE_TIMEOUT(!_p_twim->EVENTS_LASTRX && !_p_twim->EVENTS_ERROR,_timeout);
   _p_twim->EVENTS_LASTRX = 0x0UL;
 
   if (stopBit || _p_twim->EVENTS_ERROR)
   {
     _p_twim->TASKS_STOP = 0x1UL;
-    while(!_p_twim->EVENTS_STOPPED);
+    WHILE_TIMEOUT(!_p_twim->EVENTS_STOPPED,_timeout);
     _p_twim->EVENTS_STOPPED = 0x0UL;
   }
   else
   {
     _p_twim->TASKS_SUSPEND = 0x1UL;
-    while(!_p_twim->EVENTS_SUSPENDED);
+    WHILE_TIMEOUT(!_p_twim->EVENTS_SUSPENDED,_timeout);
     _p_twim->EVENTS_SUSPENDED = 0x0UL;
   }
 
@@ -227,24 +243,24 @@ uint8_t TwoWire::endTransmission(bool stopBit)
 
   _p_twim->TASKS_STARTTX = 0x1UL;
 
-  while(!_p_twim->EVENTS_TXSTARTED && !_p_twim->EVENTS_ERROR);
+  WHILE_TIMEOUT(!_p_twim->EVENTS_TXSTARTED && !_p_twim->EVENTS_ERROR,_timeout);
   _p_twim->EVENTS_TXSTARTED = 0x0UL;
 
   if (txBuffer.available()) {
-    while(!_p_twim->EVENTS_LASTTX && !_p_twim->EVENTS_ERROR);
+    WHILE_TIMEOUT(!_p_twim->EVENTS_LASTTX && !_p_twim->EVENTS_ERROR,_timeout);
   }
   _p_twim->EVENTS_LASTTX = 0x0UL;
 
   if (stopBit || _p_twim->EVENTS_ERROR)
   {
     _p_twim->TASKS_STOP = 0x1UL;
-    while(!_p_twim->EVENTS_STOPPED);
+    WHILE_TIMEOUT(!_p_twim->EVENTS_STOPPED,_timeout);
     _p_twim->EVENTS_STOPPED = 0x0UL;
   }
   else
   {
     _p_twim->TASKS_SUSPEND = 0x1UL;
-    while(!_p_twim->EVENTS_SUSPENDED);
+    WHILE_TIMEOUT(!_p_twim->EVENTS_SUSPENDED,_timeout);
     _p_twim->EVENTS_SUSPENDED = 0x0UL;
   }
 

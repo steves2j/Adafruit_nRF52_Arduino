@@ -65,6 +65,7 @@ class TwoWire : public Stream
     inline size_t write(int n)           { return write((uint8_t)n); }
     using Print::write;
 
+
   private:
 #if defined(NRF52) || defined(NRF52_SERIES)
     NRF_TWIM_Type * _p_twim;
