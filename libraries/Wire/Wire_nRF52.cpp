@@ -162,10 +162,16 @@ void TwoWire::end() {
   }
 }
 
+uint32_t TwoWire::errorStatus(){
+  return _errorStatus;
+}
+
 uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
 {
+  _errorStatus=0;
   if(quantity == 0)
   {
+    _errorStatus=ERROR_QTY_ZERO;
     return 0;
   }
 
@@ -200,6 +206,7 @@ uint8_t TwoWire::requestFrom(uint8_t address, size_t quantity, bool stopBit)
 
   if (_p_twim->EVENTS_ERROR)
   {
+    _errorStatus|=ERROR_TWI_ERROR;
     _p_twim->EVENTS_ERROR = 0x0UL;
   }
 

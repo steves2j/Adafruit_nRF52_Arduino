@@ -30,6 +30,13 @@
 // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
 
+#define ERROR_QTY_ZERO 0b00000000000000000000000000000001
+#define ERROR_TIMEOUT_RXSTARTED 0b00000000000000000000000000000010
+#define ERROR_TIMEOUT_LASTRX 0b00000000000000000000000000000100
+#define ERROR_TIMEOUT_STOPPED 0b00000000000000000000000000001000
+#define ERROR_TIMEOUT_SUSPENDED 0b00000000000000000000000000010000
+#define ERROR_TWI_ERROR 0b00000000000000000000000000100000
+
 class TwoWire : public Stream
 {
   public:
@@ -39,6 +46,7 @@ class TwoWire : public Stream
     void end();
     void setClock(uint32_t);
     void setPins(uint8_t pinSDA, uint8_t pinSCL);
+    uint32_t errorStatus();
 
     void beginTransmission(uint8_t);
     uint8_t endTransmission(bool stopBit);
@@ -90,6 +98,8 @@ class TwoWire : public Stream
     // TX buffer
     RingBuffer txBuffer;
     uint8_t txAddress;
+
+    uint32_t _errorStatus;
 
     // Callback user functions
     void (*onRequestCallback)(void);

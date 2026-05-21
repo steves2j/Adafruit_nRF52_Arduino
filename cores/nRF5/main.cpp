@@ -42,6 +42,16 @@ void initVariant() { }
 #define LOOP_STACK_SZ       (256*4)
 #define CALLBACK_STACK_SZ   (256*3)
 
+extern "C"
+{
+
+void HardFault_Handler(void)
+{
+  // reset on hardfault
+  NVIC_SystemReset();
+}
+}
+
 static TaskHandle_t  _loopHandle;
 
 static void loop_task(void* arg)
