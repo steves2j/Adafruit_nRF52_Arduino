@@ -94,14 +94,22 @@ static const uint8_t ADC_BAT  = PIN_VBAT;
 #define PIN_NFC2                (34)
 
 // Serial interfaces
+#ifndef PIN_SERIAL1_RX
 #define PIN_SERIAL1_RX          (7)
+#endif
+#ifndef PIN_SERIAL1_TX
 #define PIN_SERIAL1_TX          (6)
+#endif
 
 static const uint8_t RX  = PIN_SERIAL1_RX;
 static const uint8_t TX  = PIN_SERIAL1_TX;
 
+#ifndef PIN_SERIAL2_RX
 #define PIN_SERIAL2_RX        (33)
+#endif
+#ifndef PIN_SERIAL2_TX
 #define PIN_SERIAL2_TX        (34)
+#endif
 
 static const uint8_t RX1  = PIN_SERIAL2_RX;
 static const uint8_t TX1  = PIN_SERIAL2_TX;
